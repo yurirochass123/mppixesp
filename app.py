@@ -51,27 +51,34 @@ def webhook():
 
     if (
         dados.get("type") == "payment"
-        and dados.get("action") == "payment.created"
+        and dados.get("action") in ["payment.created", "payment.updated"]
         and dados.get("data")
     ):
         payment_id = dados["data"]["id"]
-        print(f"💳 Pagamento criado: ID {payment_id}")
+        print(f"💳 Pagamento recebido: ID {payment_id}")
 
-        pagamento = requests.get(
-            f"https://api.mercadopago.com/v1/payments/{payment_id}",
-            headers={"Authorization": f"Bearer {ACCESS_TOKEN}"}
-        ).json()
+        try:
+            pagamento = requests.get(
+                f"https://api.mercadopago.com/v1/payments/{payment_id}",
+                headers={"Authorization": f"Bearer {ACCESS_TOKEN}"}
+            ).json()
 
-        if pagamento.get("status") == "approved":
-            print("✅ Pagamento aprovado! Enviando via MQTT...")
-            try:
-                client = mqtt.Client()
-                client.connect(MQTT_BROKER, MQTT_PORT, 60)
-                client.publish(MQTT_TOPIC, "LIBERAR_AGUA")
-                client.disconnect()
-                print("🚰 Mensagem MQTT enviada com sucesso!")
-            except Exception as e:
-                print("❌ Erro ao enviar MQTT:", e)
+            status = pagamento.get("status")
+            print(f"📦 Status atual: {status}")
+
+            if status == "approved":
+                print("✅ Pagamento aprovado! Enviando via MQTT...")
+                try:
+                    client = mqtt.Client()
+                    client.connect(MQTT_BROKER, MQTT_PORT, 60)
+                    client.publish(MQTT_TOPIC, "LIBERAR_AGUA")
+                    client.disconnect()
+                    print("🚰 Mensagem MQTT enviada com sucesso!")
+                except Exception as e:
+                    print("❌ Erro ao enviar MQTT:", e)
+
+        except Exception as e:
+            print("❌ Erro ao consultar pagamento:", e)
 
     return jsonify({"status": "ok"}), 200
 
