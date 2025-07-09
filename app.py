@@ -53,5 +53,35 @@ def criar_pix():
 def hello():
     return "Servidor Pix ativo 🚰", 200
 
+@app.route("/webhook", methods=["POST"])
+def webhook():
+    dados = request.json
+
+    # Aqui você pode imprimir e analisar o conteúdo recebido
+    print("🔔 Webhook recebido:", dados)
+
+    # Exemplo: verificar se é um pagamento Pix aprovado
+    if (
+        dados.get("type") == "payment"
+        and dados.get("action") == "payment.created"
+        and dados.get("data")
+    ):
+        payment_id = dados["data"]["id"]
+        print(f"Pagamento criado: ID {payment_id}")
+
+        # Você pode fazer um GET para buscar detalhes desse pagamento
+        # e verificar o status
+        pagamento = requests.get(
+            f"https://api.mercadopago.com/v1/payments/{payment_id}",
+            headers={"Authorization": f"Bearer {ACCESS_TOKEN}"}
+        ).json()
+
+        if pagamento.get("status") == "approved":
+            print("✅ Pagamento aprovado!")
+            # Aqui você poderá acionar o ESP32 (via polling, MQTT, ou fila)
+
+    return jsonify({"status": "ok"}), 200
+
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
