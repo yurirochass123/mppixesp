@@ -3,6 +3,7 @@ import requests
 import os
 import uuid
 import paho.mqtt.client as mqtt
+import ssl
 
 app = Flask(__name__)
 
@@ -71,7 +72,9 @@ def webhook():
             if status == "approved":
                 print("✅ Pagamento aprovado! Enviando via MQTT...")
                 try:
-                    client = mqtt.Client()
+                    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+                    client.username_pw_set(MQTT_USER, MQTT_PASS)
+                    client.tls_set(cert_reqs=ssl.CERT_REQUIRED)
                     client.connect(MQTT_BROKER, MQTT_PORT, 60)
                     client.publish(MQTT_TOPIC, "LIBERAR_AGUA")
                     client.disconnect()
