@@ -7,8 +7,8 @@ import paho.mqtt.client as mqtt
 app = Flask(__name__)
 
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
-MQTT_BROKER = "broker.hivemq.com"
-MQTT_PORT = 1883
+MQTT_BROKER = "0ea2697a3d79439dbfd101a6f7896593.s1.eu.hivemq.cloud"
+MQTT_PORT = 8883
 MQTT_TOPIC = "solidus/pix/confirmado"
 
 @app.route("/criar-pix", methods=["POST"])
