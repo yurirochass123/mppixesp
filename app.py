@@ -2,10 +2,14 @@ from flask import Flask, request, jsonify
 import requests
 import os
 import uuid
+import paho.mqtt.client as mqtt
 
 app = Flask(__name__)
 
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
+MQTT_BROKER = "broker.hivemq.com"
+MQTT_PORT = 1883
+MQTT_TOPIC = "solidus/pix/confirmado"
 
 @app.route("/criar-pix", methods=["POST"])
 def criar_pix():
@@ -20,22 +24,13 @@ def criar_pix():
         }
     }
 
-    idempotency_key = str(uuid.uuid4())  # Gere um ID único
-
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
         "Content-Type": "application/json",
-        "X-Idempotency-Key": idempotency_key
+        "X-Idempotency-Key": str(uuid.uuid4())
     }
 
-    print("📤 Enviando payload para Mercado Pago:")
-    print(payload)
-
     response = requests.post("https://api.mercadopago.com/v1/payments", json=payload, headers=headers)
-
-    print(f"📥 Resposta Mercado Pago: {response.status_code}")
-    print("🧾 Conteúdo da resposta:")
-    print(response.text)
 
     if response.status_code == 201:
         dados = response.json()
@@ -49,15 +44,9 @@ def criar_pix():
         return jsonify({"erro": response.json()}), response.status_code
 
 
-@app.route("/", methods=["GET"])
-def hello():
-    return "Servidor Pix ativo 🚰", 200
-
-
 @app.route("/webhook", methods=["POST"])
 def webhook():
     dados = request.json
-
     print("🔔 Webhook recebido:", dados)
 
     if (
@@ -66,7 +55,7 @@ def webhook():
         and dados.get("data")
     ):
         payment_id = dados["data"]["id"]
-        print(f"Pagamento criado: ID {payment_id}")
+        print(f"💳 Pagamento criado: ID {payment_id}")
 
         pagamento = requests.get(
             f"https://api.mercadopago.com/v1/payments/{payment_id}",
@@ -74,10 +63,22 @@ def webhook():
         ).json()
 
         if pagamento.get("status") == "approved":
-            print("✅ Pagamento aprovado!")
+            print("✅ Pagamento aprovado! Enviando via MQTT...")
+            try:
+                client = mqtt.Client()
+                client.connect(MQTT_BROKER, MQTT_PORT, 60)
+                client.publish(MQTT_TOPIC, "LIBERAR_AGUA")
+                client.disconnect()
+                print("🚰 Mensagem MQTT enviada com sucesso!")
+            except Exception as e:
+                print("❌ Erro ao enviar MQTT:", e)
 
     return jsonify({"status": "ok"}), 200
 
+
+@app.route("/", methods=["GET"])
+def hello():
+    return "Servidor Pix com MQTT ativo 🚰", 200
 
 if __name__ == "__main__":
     print("🚀 Servidor Flask rodando na porta 8080...")
