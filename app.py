@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN")
+ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 
 @app.route("/criar-pix", methods=["POST"])
 def criar_pix():
@@ -32,7 +32,7 @@ def criar_pix():
     }
 
     headers = {
-        "Authorization": f"Bearer {MP_ACCESS_TOKEN}",
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
         "Content-Type": "application/json"
     }
 
