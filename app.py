@@ -32,7 +32,7 @@ def criar_pix():
     }
 
     headers = {
-        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Authorization": f"Bearer {MP_ACCESS_TOKEN}",
         "Content-Type": "application/json"
     }
 
