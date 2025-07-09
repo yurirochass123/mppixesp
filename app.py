@@ -9,6 +9,8 @@ app = Flask(__name__)
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 MQTT_BROKER = "0ea2697a3d79439dbfd101a6f7896593.s1.eu.hivemq.cloud"
 MQTT_PORT = 8883
+MQTT_USER = "esp32_user"
+MQTT_PASS = "Esp32_pass"
 MQTT_TOPIC = "solidus/pix/confirmado"
 
 @app.route("/criar-pix", methods=["POST"])
