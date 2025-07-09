@@ -19,9 +19,12 @@ def criar_pix():
         }
     }
 
+    idempotency_key = str(uuid.uuid4())  # Gere um ID único
+
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "X-Idempotency-Key": idempotency_key
     }
 
     print("📤 Enviando payload para Mercado Pago:")
