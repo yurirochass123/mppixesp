@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import requests
 import os
 import uuid
+import time
 import paho.mqtt.client as mqtt
 import ssl
 
@@ -74,11 +75,18 @@ def webhook():
                 try:
                     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
                     client.username_pw_set(MQTT_USER, MQTT_PASS)
-                    client.tls_set(cert_reqs=ssl.CERT_REQUIRED)
+                    client.tls_set(cert_reqs=ssl.CERT_NONE)  # Para teste, use CERT_REQUIRED em produção
                     client.connect(MQTT_BROKER, MQTT_PORT, 60)
-                    client.publish(MQTT_TOPIC, "LIBERAR_AGUA")
+
+                    client.loop_start()
+                    result = client.publish(MQTT_TOPIC, "LIBERAR_AGUA")
+                    print("📤 Resultado do publish:", result)
+
+                    time.sleep(1)  # Garante que a mensagem seja enviada antes do disconnect
+                    client.loop_stop()
                     client.disconnect()
                     print("🚰 Mensagem MQTT enviada com sucesso!")
+
                 except Exception as e:
                     print("❌ Erro ao enviar MQTT:", e)
 
